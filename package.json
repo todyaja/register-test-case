@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
-    "node": "^22.5.0",
-    "typescript-logging": "^2.2.0"
+    "node": "^22.5.0"
   }
 }

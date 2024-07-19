@@ -119,9 +119,12 @@ test.describe("Registration Page", () => {
       })
     );
 
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
+
     await expect(
       page.getByTestId("register__text-field__name__error")
-    ).toContainText("Wajib diisi");
+    ).toContainText("min. 5 karakter.");
   });
 
   test("phone number should show error if under 10 character", async ({
@@ -134,9 +137,30 @@ test.describe("Registration Page", () => {
       "123"
     );
 
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
+
     await expect(
       page.getByTestId("register__text-field__phone-number__error")
-    ).toContainText("Wajib diisi");
+    ).toContainText("tidak boleh kurang dari 10");
+  });
+
+  test("phone number should show error if over 12 character", async ({
+    page,
+  }) => {
+    await page.goto("https://dashboard.melaka.app/register");
+
+    await page.fill(
+      'input[data-testid="register__text-field__phone-number"]',
+      "8888888888888"
+    );
+
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
+
+    await expect(
+      page.getByTestId("register__text-field__phone-number__error")
+    ).toContainText(" lebih dari 12 karakter");
   });
 
   test("bussiness name should show error if under 5 character", async ({
@@ -154,9 +178,12 @@ test.describe("Registration Page", () => {
       })
     );
 
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
+
     await expect(
       page.getByTestId("register__text-field__business-name__error")
-    ).toContainText("Wajib diisi");
+    ).toContainText("tidak boleh kurang dari 5 karakter.");
   });
 
   test("email should show error if not valid", async ({ page }) => {
@@ -167,9 +194,12 @@ test.describe("Registration Page", () => {
       faker.internet.email().split("@")[0]
     );
 
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
+
     await expect(
       page.getByTestId("register__text-field__email__error")
-    ).toContainText("Wajib diisi");
+    ).toContainText("Harap isi dengan format yang benar.");
   });
 
   test("password should show error if under 8 character", async ({ page }) => {
@@ -179,6 +209,9 @@ test.describe("Registration Page", () => {
       'input[data-testid="register__text-field__password"]',
       "pa123"
     );
+
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
 
     await expect(
       page.getByTestId("register__text-field__password__error")
@@ -193,12 +226,15 @@ test.describe("Registration Page", () => {
       "longpassword"
     );
 
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
+
     await expect(
       page.getByTestId("register__text-field__password__error")
     ).toContainText("Min. 8 karakter, harus kombinasi dari huruf dan angka.");
   });
 
-  test(`confirm_password_should_show_error_if_not_the_same_as_password`, async ({
+  test(`confirm password should show error if not the same as password`, async ({
     page,
   }) => {
     await page.goto("https://dashboard.melaka.app/register");
@@ -215,9 +251,9 @@ test.describe("Registration Page", () => {
       password + "notSame"
     );
 
-    await page.click(
-      'input[data-testid="register__radio-button__toko-retail"]'
-    );
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__checkbox__tnc").click();
+    await page.getByTestId("register__button__sign-up").click();
 
     await expect(
       page.getByTestId("register__text-field__confirm-password__error")
@@ -225,8 +261,6 @@ test.describe("Registration Page", () => {
   });
 
   test("should be able to register", async ({ page }) => {
-    await page.context().clearCookies();
-    await page.context().clearPermissions();
     await page.goto("https://dashboard.melaka.app/register");
 
     await page.fill(
@@ -241,7 +275,7 @@ test.describe("Registration Page", () => {
 
     await page.fill(
       'input[data-testid="register__text-field__phone-number"]',
-      "85648646546"
+      "8" + faker.number.bigInt({ min: 1000000000, max: 9999999999 })
     );
 
     await page.fill(
@@ -258,10 +292,9 @@ test.describe("Registration Page", () => {
       'input[data-testid="register__radio-button__toko-retail"]'
     );
 
-    await page.fill(
-      'input[data-testid="register__text-field__email"]',
-      faker.internet.email()
-    );
+    const email = faker.internet.email();
+
+    await page.fill('input[data-testid="register__text-field__email"]', email);
 
     await page.fill(
       'input[data-testid="register__text-field__password"]',
@@ -274,13 +307,16 @@ test.describe("Registration Page", () => {
     );
 
     await page.getByTestId("register__checkbox__tnc").click();
-    await Promise.all([
-      page.getByTestId("register__button__sign-up").click(),
-      page.waitForURL("https://dashboard.melaka.app/account-activation"),
-    ]);
+    await page.getByTestId("register__button__sign-up").click();
 
-    await expect(
-      page.getByRole("heading", { name: "Aktivasi Akun" })
-    ).toBeVisible();
+    await Promise.all([
+      expect(
+        page.getByRole("heading", { name: "Aktivasi Akun" })
+      ).toBeVisible(),
+      ,
+      expect(page.getByTestId("account-activation__content")).toContainText(
+        email
+      ),
+    ]);
   });
 });
